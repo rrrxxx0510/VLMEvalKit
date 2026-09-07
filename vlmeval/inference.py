@@ -245,9 +245,18 @@ def infer_data_job(
         for x in data['index']:
             assert x in data_all
         if os.getenv('SPLIT_THINK', False):
-            if all(_is_structured_record(data_all[x]) for x in data['index']):
-                prediction = [data_all[x]['prediction'] for x in data['index']]
-                extra_records = [data_all[x]['extra_records'] for x in data['index']]
+            # Gate per sample: a failed sample (plain string from BaseAPI) should not
+            # discard the structured records of the other samples in the dataset.
+            if any(_is_structured_record(data_all[x]) for x in data['index']):
+                prediction = [
+                    data_all[x]['prediction']
+                    if _is_structured_record(data_all[x]) else str(data_all[x])
+                    for x in data['index']
+                ]
+                extra_records = [
+                    data_all[x]['extra_records'] if _is_structured_record(data_all[x]) else {}
+                    for x in data['index']
+                ]
                 data['extra_records'] = extra_records
             else:
                 prediction = [str(data_all[x]) for x in data['index']]
@@ -274,9 +283,18 @@ def infer_data_job(
         else:
             # data['prediction'] = [str(data_all[x]) for x in data['index']]
             # Add for agent evaluation
-            if all(_is_structured_record(data_all[x]) for x in data['index']):
-                data['prediction'] = [data_all[x]['prediction'] for x in data['index']]
-                data['extra_records'] = [data_all[x]['extra_records'] for x in data['index']]
+            # Gate per sample: a failed sample (plain string from BaseAPI) should not
+            # discard the structured records of the other samples in the dataset.
+            if any(_is_structured_record(data_all[x]) for x in data['index']):
+                data['prediction'] = [
+                    data_all[x]['prediction']
+                    if _is_structured_record(data_all[x]) else str(data_all[x])
+                    for x in data['index']
+                ]
+                data['extra_records'] = [
+                    data_all[x]['extra_records'] if _is_structured_record(data_all[x]) else {}
+                    for x in data['index']
+                ]
             else:
                 data['prediction'] = [str(data_all[x]) for x in data['index']]
         if 'image' in data:
