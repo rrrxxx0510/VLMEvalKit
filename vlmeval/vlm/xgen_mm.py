@@ -13,6 +13,12 @@ class XGenMM(BaseModel):
     def __init__(self, model_path='Salesforce/xgen-mm-phi3-mini-instruct-interleave-r-v1.5', **kwargs):
         try:
             from transformers import AutoImageProcessor, AutoModelForVision2Seq, AutoTokenizer
+        except ImportError:
+            from transformers import (
+                AutoImageProcessor,
+                AutoModelForImageTextToText as AutoModelForVision2Seq,
+                AutoTokenizer,
+            )
         except Exception as err:
             logging.critical('Please install the latest version transformers.')
             raise err
